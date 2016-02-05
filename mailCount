@@ -1,0 +1,52 @@
+#!/bin/bash
+
+# mailCount v2.0
+# http://topicdesk.com
+
+### reports the count of messages in every Inbox, Sent, Deleted and Junk folder.
+### output is to the current user desktop  mailCount_date.csv
+
+### requires OS X 10.8 with Server version 2 or higher
+
+
+# good path for scripts
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Server.app/Contents/ServerRoot/usr/bin:/Applications/Server.app/Contents/ServerRoot/usr/sbin:/Applications/Server.app/Contents/ServerRoot/usr/libexec
+
+# check if root
+[ ! "$(whoami)" = root ] && die "This script must be run with sudo or from root user"
+
+# Output CSV file path/nam
+CSV=~/Desktop/MailCount_$(date +"%b%d").csv
+
+# backup existing CSV
+[ -f "$CSV" ] && cat "$CSV" > "${CSV}.bak" && rm "$CSV"
+
+# functions
+die() ( echo "$@"; exit 1; )
+out() { echo -e "$@" | tee -a "$CSV"; }
+
+# Notify tty script is starting
+[ -t ] && echo -e "\n\n#### The CSV will be saved to: $CSV\n\n"
+
+# get mailstore
+MAILSTORE=$(serveradmin settings mail:imap:partition-default | cut -d '"' -f 2)
+cd "$MAILSTORE" || die "Could not access mailstore: $MAILSTORE"
+
+out "## mailCount Report:   $(date)"
+out "## Mailstore $MAILSTORE"
+out "NAME,INBOX,SENT,TRASH,JUNK\n"
+
+ls | grep -E '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$' | while read GUID; do
+   shortname=$(dscl /Search -search /Users GeneratedUID "$GUID" 2>/dev/null | head -1 |  awk '{print $1}')
+   if [ -n "$shortname" ]; then
+       # Valid user
+        cd "$MAILSTORE/$GUID"
+        INBOX=`find {cur,new} -type f -name "*S=*" 2> /dev/null | wc -l | sed 's/^[ \t]*//'`
+        SENT=`find .Sent* -type f -name "*S=*" 2> /dev/null | wc -l | sed 's/^[ \t]*//'`
+        TRASH=`find .Delet* -type f -name "*S=*" 2> /dev/null | wc -l | sed 's/^[ \t]*//'`
+        JUNK=`find .Junk* -type f -name "*S=*" 2> /dev/null | wc -l | sed 's/^[ \t]*//'`
+        out "$shortname,$INBOX,$SENT,$TRASH,$JUNK"
+   fi
+done
+
+[ -t ] && echo -e "\n\n## DONE\n\n"
