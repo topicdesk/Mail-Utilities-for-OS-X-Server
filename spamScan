@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+
+use IO::File;
+
+for (@ARGV) {
+        undef $keep;
+
+        $fh = new IO::File $_;
+
+        while (<$fh>) {
+                if (/^X-Spam-Status:/) {
+                        chomp;
+                        ($text = $_) =~ s/X-Spam-Status:\s+//;;
+                        $keep = 1;
+                        next;
+                }
+
+                if (defined $keep) {
+                        if (/^\s/) {
+                                chomp;
+                                s/^\s+/ /;
+                                $text .= $_;
+                        } else {
+                                last;
+                        }
+                }
+        }
+
+        print "$text\n";
+}
+
+
