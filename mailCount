@@ -3,14 +3,26 @@
 # mailCount v2.0
 # http://topicdesk.com
 
-### reports the count of messages in every Inbox, Sent, Deleted and Junk folder.
-### output is to the current user desktop  mailCount_date.csv
+# REQUIREMENTS
+#   OS X 10.8 with Server version 2 or higher
 
-### requires OS X 10.8 with Server version 2 or higher
+# USAGE
+#   sudo mailCount
 
+# OUTPUT
+# reports the message count for all users in these folders
+   # INBOX
+   # TRASH  (folders that start with Deleted)
+   # SENT  (folders starting with Sent)
+   # JUNK (folders starting with Junk)
+# output is to the current user desktop: mailCount_date.csv
 
-# good path for scripts
+# good path for most scripts
 PATH=/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Server.app/Contents/ServerRoot/usr/bin:/Applications/Server.app/Contents/ServerRoot/usr/sbin:/Applications/Server.app/Contents/ServerRoot/usr/libexec
+
+# functions
+die() ( echo "$@"; exit 1; )
+out() { echo -e "$@" | tee -a "$CSV"; }
 
 # check if root
 [ ! "$(whoami)" = root ] && die "This script must be run with sudo or from root user"
@@ -18,12 +30,8 @@ PATH=/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Server.app/Contents/ServerRoot/
 # Output CSV file path/nam
 CSV=~/Desktop/MailCount_$(date +"%b%d").csv
 
-# backup existing CSV
-[ -f "$CSV" ] && cat "$CSV" > "${CSV}.bak" && rm "$CSV"
-
-# functions
-die() ( echo "$@"; exit 1; )
-out() { echo -e "$@" | tee -a "$CSV"; }
+# If CSV file exists, back it up
+[ -f "$CSV" ] && (cat "$CSV" >> "${CSV}.bak" && rm "$CSV")
 
 # Notify tty script is starting
 [ -t ] && echo -e "\n\n#### The CSV will be saved to: $CSV\n\n"
