@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# USAGE
+# gid uptimejeff
+#   returns GUID for uptimejeff
+# gid 7B99D102-36F6-4595-9ADD-32CD4803D870
+#   returns user for provided GUID
+
+
+ARG="$1"
+
+if echo "$ARG" | grep -E '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$' &>/dev/null; then
+  # GUID was provided
+  OUT=$(dscl /Search -search /Users GeneratedUID "$ARG" 2>/dev/null | grep GeneratedUID | awk '{print $1}')
+else
+  OUT=$(dscl /Search -read /Users/"$ARG" GeneratedUID 2>/dev/null | awk '{print $2}' )
+fi
+
+[ -n "$OUT" ] && echo "$OUT" || echo "Not Found: $ARG"
+
+
+exit 0
