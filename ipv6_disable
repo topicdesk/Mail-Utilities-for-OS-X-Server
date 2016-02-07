@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Disables ipv6 on all interfaces
+
+# good path for most scripts
+PATH=/usr/bin:/bin:/usr/sbin:/sbin:/Applications/Server.app/Contents/ServerRoot/usr/bin:/Applications/Server.app/Contents/ServerRoot/usr/sbin:/Applications/Server.app/Contents/ServerRoot/usr/libexec
+
+# functions
+die() ( echo "$@"; exit 1; )
+
+# check if root
+[ ! "$(whoami)" = root ] && die "This script must be run with sudo or from root user"
+
+networksetup -listallnetworkservices | grep -v asterisk | while read S; do 
+  networksetup -setv6off "$S" &>/dev/null && echo "$S: Disabled v6" || echo "$S: Error"
+done
+
+

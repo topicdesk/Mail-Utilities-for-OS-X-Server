@@ -1,0 +1,10 @@
+# This file is for reference only
+# topicdesk scripts do not source this file. 
+
+# references
+# https://google.github.io/styleguide/shell.xml
+
+
+die() { echo "$@" 1>&2 ; exit 1; }
+
+
